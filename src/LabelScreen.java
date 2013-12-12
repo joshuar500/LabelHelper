@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,9 +9,26 @@ import java.awt.event.FocusListener;
 public class LabelScreen extends JPanel implements ActionListener, FocusListener {
 
     JPanel panelLeft;
-    JLabel fanSelect;
     JLabel labelDisplay;
-    JTextField inputFan;
+
+    JSpinner storeSpinner;
+    JTextField inputFan1;
+    JTextField inputFan2;
+    JTextField inputFan3;
+    JTextField inputFan4;
+    JTextField inputPO;
+
+    JTextField qtyField1;
+    JTextField qtyField2;
+    JTextField qtyField3;
+    JTextField qtyField4;
+    JTextField qtyField5;
+    JTextField qtyField6;
+
+    Fans iFan1, iFan2, iFan3, iFan4;
+    String newLabel1, newLabel2, newLabel3, newLabel4;
+    String newQty1;
+
     final static int GAP = 10;
 
     public LabelScreen() {
@@ -27,14 +45,38 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
 
         panelLeft.setLayout(new BoxLayout(panelLeft, BoxLayout.PAGE_AXIS));
 
-        fanSelect = new JLabel("Frys");
-        panelLeft.add(fanSelect, BorderLayout.NORTH);
-
         panelLeft.add(createEntryFields());
+        //panelLeft.add(createEntryFields2());
         panelLeft.add(createButton());
 
         add(panelLeft);
         add(createLabelDisplay());
+    }
+
+    protected void updateDisplays() {
+
+        labelDisplay.setText(formatLabel());
+
+    }
+
+    protected String formatLabel() {
+
+        String empty = "";
+
+        if ((newLabel1 == null) || empty.equals(newLabel1)) {
+            newLabel1 = "<em>fan one empty</em>";
+        }
+        if ((newLabel2 == null) || empty.equals(newLabel2)) {
+            newLabel2 = "<em>fan one empty</em>";
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("<html><p align=left>");
+        sb.append(newLabel1 + "  X  " + newQty1); //newQty1 is actually the 2nd in the array - 1st and last are not visible
+        sb.append("<br>");
+        sb.append(newLabel2);
+
+        return sb.toString();
     }
 
     protected JComponent createLabelDisplay() {
@@ -45,7 +87,7 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         panel.setBorder(BorderFactory.createEmptyBorder(GAP / 2, 0, GAP / 2, 0));
         panel.add(new JSeparator(JSeparator.VERTICAL), BorderLayout.LINE_START);
         panel.add(labelDisplay, BorderLayout.CENTER);
-        panel.setPreferredSize(new Dimension(200, 150));
+        panel.setPreferredSize(new Dimension(400, 150));
 
         return panel;
     }
@@ -58,8 +100,9 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         button.setActionCommand("clear");
         panel.add(button);
 
-        button = new JButton("Print");
+        button = new JButton("Update");
         button.addActionListener(this);
+        button.setActionCommand("update");
         panel.add(button);
 
         panel.setBorder(BorderFactory.createEmptyBorder(0, 0, GAP - 5, GAP - 5));
@@ -67,43 +110,122 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         return panel;
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if ("clear".equals(e.getActionCommand())) {
+            inputFan1.setText("");
+            inputFan2.setText("");
+            inputFan3.setText("");
+            inputFan4.setText("");
+            inputPO.setText("");
+        } if ("update".equals(e.getActionCommand())) {
+
+            iFan1 = new Fans();
+            newLabel1 = iFan1.getFans(inputFan1.getText());
+
+            iFan2 = new Fans();
+            newLabel2 = iFan2.getFans(inputFan2.getText());
+
+            newQty1 = qtyField2.getText();
+
+        }
+        updateDisplays();
+    }
+
+
+
     protected JComponent createEntryFields() {
         JPanel panel = new JPanel(new SpringLayout());
 
-        String[] labelStrings = {"1 ", "2 ", "3 ", "4 "};
+        String[] labelStrings = {"Store ", "1 ", "2 ", "3 ", "4 ", "PO "};
 
         JLabel[] labels = new JLabel[labelStrings.length];
         JComponent[] fields = new JComponent[labelStrings.length];
+        JComponent[] qtyFields = new JComponent[labelStrings.length];
         int fieldNum = 0;
+        int qtyFieldNum = 0;
 
-        //Create the text field and set it up
-        inputFan = new JTextField("ex. 1114");
-        inputFan.setColumns(20);
-        fields[fieldNum++] = inputFan;
+        //create store label
 
-        inputFan = new JTextField();
-        inputFan.setColumns(20);
-        fields[fieldNum++] = inputFan;
+        String[] storeNames = getStoreNames();
+        storeSpinner = new JSpinner(new SpinnerListModel(storeNames));
+        fields[fieldNum++] = storeSpinner;
 
-        inputFan = new JTextField();
-        inputFan.setColumns(20);
-        fields[fieldNum++] = inputFan;
+        //Create the text fields and set it up
+        inputFan1 = new JTextField("11-14");
+        inputFan1.setColumns(12);
+        fields[fieldNum++] = inputFan1;
 
-        inputFan = new JTextField();
-        inputFan.setColumns(20);
-        fields[fieldNum++] = inputFan;
+        inputFan2 = new JTextField();
+        inputFan2.setColumns(12);
+        fields[fieldNum++] = inputFan2;
+
+        inputFan3 = new JTextField();
+        inputFan3.setColumns(12);
+        fields[fieldNum++] = inputFan3;
+
+        inputFan4 = new JTextField();
+        inputFan4.setColumns(12);
+        fields[fieldNum++] = inputFan4;
+
+
+        //Input PO
+        inputPO = new JTextField();
+        inputPO.setColumns(12);
+        fields[fieldNum++] = inputPO;
+
+
+        // QTY FIELDS
+        qtyField1 = new JTextField();
+        qtyField1.setColumns(12);
+        qtyField1.setVisible(false);
+        qtyFields[qtyFieldNum++] = qtyField1;
+
+        qtyField2 = new JTextField();
+        qtyField2.setColumns(12);
+        qtyFields[qtyFieldNum++] = qtyField2;
+
+        qtyField3 = new JTextField();
+        qtyField3.setColumns(12);
+        qtyFields[qtyFieldNum++] = qtyField3;
+
+        qtyField4 = new JTextField();
+        qtyField4.setColumns(12);
+        qtyFields[qtyFieldNum++] = qtyField4;
+
+        qtyField5 = new JTextField();
+        qtyField5.setColumns(12);
+        qtyFields[qtyFieldNum++] = qtyField5;
+
+        qtyField6 = new JTextField();
+        qtyField6.setColumns(12);
+        qtyField6.setVisible(false);
+        qtyFields[qtyFieldNum++] = qtyField6;
+
 
         for (int i = 0; i < labelStrings.length; i++) {
             labels[i] = new JLabel(labelStrings[i], JLabel.TRAILING);
             labels[i].setLabelFor(fields[i]);
             panel.add(labels[i]);
             panel.add(fields[i]);
+            panel.add(qtyFields[i]);
         }
 
-        SpringUtilities.makeCompactGrid(panel, labelStrings.length, 2, GAP, GAP, GAP, GAP / 2);
+        SpringUtilities.makeCompactGrid(panel,
+                labelStrings.length, 3, //rows, cols
+                5, 5, //initialX, initialY
+                5, 5);//xPad, yPad
 
         return panel;
 
+    }
+
+    private String[] getStoreNames() {
+        String[] storeStrings = {
+                "Frys",
+                "NewEgg"
+        };
+        return storeStrings;
     }
 
     private static void createAndShowGUI() {
@@ -120,15 +242,6 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         frame.setVisible(true);
     }
 
-    public void createAndShowGUIForMain() {
-        createAndShowGUI();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-    }
-
     @Override
     public void focusGained(FocusEvent e) {
 
@@ -137,5 +250,9 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
     @Override
     public void focusLost(FocusEvent e) {
 
+    }
+
+    public void createAndShowGUIForMain() {
+        createAndShowGUI();
     }
 }
