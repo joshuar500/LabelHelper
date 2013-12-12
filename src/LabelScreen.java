@@ -1,3 +1,9 @@
+import com.sun.org.apache.xml.internal.serialize.Printer;
+
+import javax.print.attribute.HashPrintJobAttributeSet;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttribute;
+import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -5,8 +11,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 
-public class LabelScreen extends JPanel implements ActionListener, FocusListener {
+public class LabelScreen extends JPanel implements Printable, ActionListener, FocusListener {
 
     JPanel panelLeft;
     JLabel labelDisplay;
@@ -26,8 +36,10 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
     JTextField qtyField6;
 
     Fans iFan1, iFan2, iFan3, iFan4;
-    String newLabel1, newLabel2, newLabel3, newLabel4;
+    String storeName,
+            newLabel1, newLabel2, newLabel3, newLabel4;
     String newQty1;
+    String fromStore = "SilenX Corporation <br>10606 Shoemaker Ave. <br>Santa Fe Springs, CA 90670";
 
     final static int GAP = 10;
 
@@ -64,17 +76,25 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         String empty = "";
 
         if ((newLabel1 == null) || empty.equals(newLabel1)) {
-            newLabel1 = "<em>fan one empty</em>";
+            newLabel1 = "<em></em>";
         }
         if ((newLabel2 == null) || empty.equals(newLabel2)) {
-            newLabel2 = "<em>fan one empty</em>";
+            newLabel2 = "<em></em>";
         }
+
+        String s = " ";
 
         StringBuffer sb = new StringBuffer();
         sb.append("<html><p align=left>");
-        sb.append(newLabel1 + "  X  " + newQty1); //newQty1 is actually the 2nd in the array - 1st and last are not visible
+        sb.append("From: " + fromStore);
+        sb.append("<br><br>");
+        sb.append("To:         " + storeName);
+        sb.append("<br><br>");
+        sb.append("Fans:       " + newLabel1 + "   X   " + newQty1); //newQty1 is actually the 2nd in the array - 1st and last are not visible
         sb.append("<br>");
         sb.append(newLabel2);
+
+
 
         return sb.toString();
     }
@@ -105,34 +125,15 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         button.setActionCommand("update");
         panel.add(button);
 
+        button = new JButton("Print");
+        button.addActionListener(this);
+        button.setActionCommand("print");
+        panel.add(button);
+
         panel.setBorder(BorderFactory.createEmptyBorder(0, 0, GAP - 5, GAP - 5));
 
         return panel;
     }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if ("clear".equals(e.getActionCommand())) {
-            inputFan1.setText("");
-            inputFan2.setText("");
-            inputFan3.setText("");
-            inputFan4.setText("");
-            inputPO.setText("");
-        } if ("update".equals(e.getActionCommand())) {
-
-            iFan1 = new Fans();
-            newLabel1 = iFan1.getFans(inputFan1.getText());
-
-            iFan2 = new Fans();
-            newLabel2 = iFan2.getFans(inputFan2.getText());
-
-            newQty1 = qtyField2.getText();
-
-        }
-        updateDisplays();
-    }
-
-
 
     protected JComponent createEntryFields() {
         JPanel panel = new JPanel(new SpringLayout());
@@ -228,6 +229,78 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         return storeStrings;
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if ("clear".equals(e.getActionCommand())) {
+            inputFan1.setText("");
+            inputFan2.setText("");
+            inputFan3.setText("");
+            inputFan4.setText("");
+            inputPO.setText("");
+        } if ("update".equals(e.getActionCommand())) {
+
+
+
+            if(storeSpinner.getValue().equals("Frys")) {
+                storeName = storeSpinner.getValue().toString();
+            }
+
+            iFan1 = new Fans();
+            newLabel1 = iFan1.getFans(inputFan1.getText());
+
+            iFan2 = new Fans();
+            newLabel2 = iFan2.getFans(inputFan2.getText());
+
+            newQty1 = qtyField2.getText(); // remember, qtyField2 is invisible
+
+        } if ("print".equals(e.getActionCommand())) {
+            printComponent();
+        }
+
+        updateDisplays();
+    }
+
+    @Override
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        if (pageIndex > 0) {
+            return NO_SUCH_PAGE;
+        }
+
+        Graphics2D g2d = (Graphics2D) graphics;
+        g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+        graphics.drawString(formatLabel(), 100, 100);
+
+        return PAGE_EXISTS;
+    }
+
+    public void printComponent() {
+        PrinterJob pj = PrinterJob.getPrinterJob();
+        pj.setJobName("Print Formatted Label");
+
+        pj.setPrintable(new Printable() {
+            @Override
+            public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                if (pageIndex > 0){
+                    return Printable.NO_SUCH_PAGE;
+                }
+
+                Graphics2D g2 = (Graphics2D) graphics;
+                g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+                labelDisplay.paint(g2);
+                return Printable.PAGE_EXISTS;
+            }
+        });
+        if (pj.printDialog() == false)
+            return;
+
+        try {
+            pj.print();
+        } catch (PrinterException ex) {
+            // handle exception
+        }
+    }
+
     private static void createAndShowGUI() {
         JFrame.setDefaultLookAndFeelDecorated(true);
 
@@ -242,6 +315,10 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
         frame.setVisible(true);
     }
 
+    public void createAndShowGUIForMain() {
+        createAndShowGUI();
+    }
+
     @Override
     public void focusGained(FocusEvent e) {
 
@@ -250,9 +327,5 @@ public class LabelScreen extends JPanel implements ActionListener, FocusListener
     @Override
     public void focusLost(FocusEvent e) {
 
-    }
-
-    public void createAndShowGUIForMain() {
-        createAndShowGUI();
     }
 }

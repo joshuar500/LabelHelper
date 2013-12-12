@@ -39,6 +39,6 @@ public class Fans{
                     }
                 }
             }
-        } return "test";
+        } return "";
     }
 }
