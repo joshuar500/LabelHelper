@@ -73,6 +73,7 @@ public class LabelScreen extends JPanel implements Printable, ActionListener, Fo
     }
 
     private void updateLeftDisplay() {
+
         panelLeft.add(createEntryFields());
     }
 
@@ -129,7 +130,7 @@ public class LabelScreen extends JPanel implements Printable, ActionListener, Fo
         panel.setBorder(BorderFactory.createEmptyBorder(GAP / 2, 0, GAP / 2, 0));
         panel.add(new JSeparator(JSeparator.VERTICAL), BorderLayout.LINE_START);
         panel.add(labelDisplay, BorderLayout.CENTER);
-        panel.setPreferredSize(new Dimension(400, 150));
+        panel.setPreferredSize(new Dimension(400, 500));
 
         return panel;
     }
@@ -200,7 +201,7 @@ public class LabelScreen extends JPanel implements Printable, ActionListener, Fo
 
             poNum = inputPO.getText();
 
-
+            updateDisplays();
 
         }
 
@@ -213,12 +214,13 @@ public class LabelScreen extends JPanel implements Printable, ActionListener, Fo
             Field f = new Field();
             f.addEntryFields(fieldNum);
             updateLeftDisplay();
+            labelDisplay.updateUI();
         }
         else {
             return;
         }
 
-        updateDisplays();
+
     }
 
     @Override
